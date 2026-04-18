@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Search, Plus, Pin, Trash2, X, ArrowDownCircle } from 'lucide-react';
+import { Search, Plus, Pin, Trash2, X, ArrowDownCircle, Sun, Moon } from 'lucide-react';
 import { Note } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -16,6 +16,8 @@ interface SidebarProps {
   showInstallBtn?: boolean;
   isInstallDisabled?: boolean;
   onInstall?: () => void;
+  isLightMode?: boolean;
+  onToggleTheme?: () => void;
 }
 
 const TrashIcon = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => {
@@ -56,7 +58,9 @@ export const Sidebar: FC<SidebarProps> = ({
   onClose,
   showInstallBtn,
   isInstallDisabled,
-  onInstall
+  onInstall,
+  isLightMode,
+  onToggleTheme
 }) => {
   const filteredNotes = notes
     .filter(n =>
@@ -98,6 +102,18 @@ export const Sidebar: FC<SidebarProps> = ({
                   className="min-h-[40px] min-w-[40px] rounded-full text-accent hover:bg-surface transition-colors flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 >
                   <ArrowDownCircle size={18} />
+                </motion.button>
+              )}
+              {onToggleTheme && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onToggleTheme}
+                  aria-label="Toggle Theme"
+                  title="Toggle Theme"
+                  className="min-h-[40px] min-w-[40px] rounded-full text-text-secondary hover:text-accent hover:bg-surface transition-colors flex items-center justify-center"
+                >
+                  {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
                 </motion.button>
               )}
               <motion.button

@@ -25,6 +25,23 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(() => isStandaloneDisplay());
   const [isInstallPromptOpen, setIsInstallPromptOpen] = useState(false);
+  const [isLightMode, setIsLightMode] = useState(() => {
+    return localStorage.getItem('theme') === 'light';
+  });
+
+  useEffect(() => {
+    if (isLightMode) {
+      document.documentElement.classList.add('light-mode');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.remove('light-mode');
+      localStorage.setItem('theme', 'dark');
+    }
+  }, [isLightMode]);
+
+  const toggleTheme = useCallback(() => {
+    setIsLightMode(prev => !prev);
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
@@ -241,7 +258,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-dvh bg-black text-neutral-300 font-sans selection:bg-neutral-800">
+    <div className="flex h-dvh bg-amoled-black text-text-primary font-sans selection:bg-accent/20">
       <Sidebar
         notes={notes}
         selectedId={selectedId}
@@ -255,6 +272,8 @@ export default function App() {
         showInstallBtn={showInstallBtn}
         isInstallDisabled={isInstallPromptOpen}
         onInstall={handleInstallClick}
+        isLightMode={isLightMode}
+        onToggleTheme={toggleTheme}
       />
 
       <Editor
