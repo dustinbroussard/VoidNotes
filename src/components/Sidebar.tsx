@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Search, Plus, Pin, FileText, Trash2, X, Download, Copy, Menu, Info, Share, FileUp, ArrowDownCircle } from 'lucide-react';
+import { Search, Plus, Pin, Trash2, X, ArrowDownCircle } from 'lucide-react';
 import { Note } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -14,6 +14,7 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   showInstallBtn?: boolean;
+  isInstallDisabled?: boolean;
   onInstall?: () => void;
 }
 
@@ -34,8 +35,9 @@ const TrashIcon = ({ onClick }: { onClick: (e: React.MouseEvent) => void }) => {
           setIsConfirming(false);
         }
       }}
-      className={`p-2 transition-all rounded-full ${isConfirming ? 'text-red-500 bg-red-500/10' : 'opacity-0 group-hover:opacity-40 hover:opacity-100 text-text-secondary'}`}
+      className={`min-h-[36px] min-w-[36px] transition-all rounded-full flex items-center justify-center ${isConfirming ? 'text-red-500 bg-red-500/10' : 'text-text-secondary opacity-35 md:opacity-0 md:group-hover:opacity-40 hover:opacity-100'}`}
       title={isConfirming ? "Click again to confirm delete" : "Delete note"}
+      aria-label={isConfirming ? 'Confirm delete note' : 'Delete note'}
     >
       {isConfirming ? <X size={14} /> : <Trash2 size={14} />}
     </motion.button>
@@ -53,6 +55,7 @@ export const Sidebar: FC<SidebarProps> = ({
   isOpen,
   onClose,
   showInstallBtn,
+  isInstallDisabled,
   onInstall
 }) => {
   const filteredNotes = notes
@@ -68,7 +71,7 @@ export const Sidebar: FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-80 bg-amoled-black border-r border-border transition-transform duration-300 md:relative md:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-50 w-80 bg-amoled-black border-r border-border shadow-2xl transition-transform duration-300 ease-out md:relative md:translate-x-0 md:shadow-none ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
@@ -89,9 +92,10 @@ export const Sidebar: FC<SidebarProps> = ({
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onInstall}
+                  disabled={isInstallDisabled}
                   aria-label="Install App"
                   title="Install App"
-                  className="p-2 rounded-full text-accent hover:bg-surface transition-colors"
+                  className="min-h-[40px] min-w-[40px] rounded-full text-accent hover:bg-surface transition-colors flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
                 >
                   <ArrowDownCircle size={18} />
                 </motion.button>
@@ -102,13 +106,14 @@ export const Sidebar: FC<SidebarProps> = ({
                 onClick={onNew}
                 aria-label="New Note"
                 title="New Note"
-                className="p-2 rounded-full text-accent bg-surface hover:bg-neutral-800 transition-colors"
+                className="min-h-[40px] min-w-[40px] rounded-full text-accent bg-surface hover:bg-neutral-800 transition-colors flex items-center justify-center"
               >
                 <Plus size={18} />
               </motion.button>
               <button
                 onClick={onClose}
-                className="md:hidden p-2 rounded-full hover:bg-surface transition-colors text-text-secondary"
+                className="md:hidden min-h-[40px] min-w-[40px] rounded-full hover:bg-surface transition-colors text-text-secondary flex items-center justify-center"
+                aria-label="Close notes list"
               >
                 <X size={18} />
               </button>
@@ -122,24 +127,26 @@ export const Sidebar: FC<SidebarProps> = ({
               placeholder="Filter notes..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
+              aria-label="Search notes"
               className="w-full bg-surface border border-border rounded-lg py-2 pl-9 pr-3.5 text-xs text-text-primary focus:outline-none focus:border-text-secondary transition-all placeholder:text-text-secondary/40"
             />
           </div>
         </div>
 
         {/* Notes List */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide">
+        <div className="flex-1 overflow-y-auto scrollbar-hide pt-2 pb-6">
           <AnimatePresence initial={false}>
             {filteredNotes.map((note) => (
               <motion.div
                 key={note.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className={`group relative px-6 py-4 cursor-pointer border-b border-border transition-all ${
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className={`group relative mx-4 my-2 px-5 py-4 cursor-pointer rounded-xl transition-all duration-200 ${
                   selectedId === note.id
-                    ? 'bg-surface border-l-[3px] border-l-accent'
-                    : 'border-l-[3px] border-l-transparent hover:bg-surface/50'
+                    ? 'bg-surface border border-border/60 shadow-sm'
+                    : 'hover:bg-surface/40 border border-transparent hover:border-border/30'
                 }`}
                 onClick={() => {
                   onSelect(note.id);
@@ -167,8 +174,14 @@ export const Sidebar: FC<SidebarProps> = ({
           </AnimatePresence>
 
           {filteredNotes.length === 0 && (
-            <div className="px-6 py-12 text-center">
-              <p className="text-[10px] text-text-secondary font-mono uppercase tracking-[0.2em] opacity-40">Zero Results</p>
+            <div className="px-6 py-16 flex flex-col items-center justify-center text-center opacity-60">
+              <p className="text-xs text-text-secondary font-mono tracking-widest uppercase mb-3">
+                {searchTerm ? 'No Matches' : 'No Notes Yet'}
+              </p>
+              <p className="text-[11px] text-text-secondary/60 mb-3">
+                {searchTerm ? 'Try a simpler search term.' : 'Create your first note from the + button.'}
+              </p>
+              <div className="w-8 h-[1px] bg-border mix-blend-screen" />
             </div>
           )}
         </div>

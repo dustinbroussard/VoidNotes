@@ -1,9 +1,12 @@
-const CACHE_NAME = 'void-notes-cache-v2';
+const CACHE_NAME = 'void-notes-cache-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-192X192.png',
+  '/icon-512x512.png'
 ];
+const APP_SHELL_URL = '/index.html';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -24,31 +27,50 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Use Network-First for HTML and JS/CSS assets to ensure the latest UI is loaded during updates
-  if (
-    event.request.mode === 'navigate' || 
-    event.request.destination === 'script' || 
-    event.request.destination === 'style'
-  ) {
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
+
+  if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const resClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+          const responseToCache = response.clone();
+          void caches.open(CACHE_NAME).then((cache) => {
+            cache.put(APP_SHELL_URL, responseToCache);
+          });
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(async () => {
+          const cachedResponse = await caches.match(APP_SHELL_URL);
+          return cachedResponse || Response.error();
+        })
     );
     return;
   }
 
-  // Cache-First for others (images, manifests, etc)
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((fetchResponse) => {
-        const resClone = fetchResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
-        return fetchResponse;
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
+        }
+
+        const responseToCache = networkResponse.clone();
+        void caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return networkResponse;
       });
     })
   );
