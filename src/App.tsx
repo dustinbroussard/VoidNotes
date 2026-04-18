@@ -3,7 +3,7 @@ import { Note } from './types';
 import { storage } from './lib/storage';
 import { Sidebar } from './components/Sidebar';
 import { Editor } from './components/Editor';
-import { FileUp } from 'lucide-react';
+import { ArrowDownCircle, FileUp } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
@@ -275,6 +275,21 @@ export default function App() {
         accept=".txt"
         onChange={handleImport}
       />
+
+      {showInstallBtn && !isSidebarOpen && (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          type="button"
+          onClick={handleInstallClick}
+          disabled={isInstallPromptOpen}
+          className="fixed bottom-24 right-6 min-h-[52px] min-w-[52px] rounded-full border border-border bg-surface text-accent shadow-lg transition-colors z-10 md:hidden flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
+          title="Install App"
+          aria-label="Install App"
+        >
+          <ArrowDownCircle size={24} />
+        </motion.button>
+      )}
 
       <motion.button
         whileHover={{ scale: 1.1 }}
