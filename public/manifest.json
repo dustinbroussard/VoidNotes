@@ -1,6 +1,6 @@
 {
   "name": "Void Notes",
-  "short_name": "Void",
+  "short_name": "Notes",
   "id": "/",
   "description": "Minimalist AMOLED dark-themed local-first notes application.",
   "start_url": "/",
